@@ -1,6 +1,8 @@
--- CREDITS TO ENKEI
+--- sigma sigma boi 
+--- Credits to Enkei for making the original LuaU Drawing lib
+--- Credits to Dexian and the Metal team for fixing issues and added UNC Functions
 
-local coreGui = game:GetService("CoreGui")
+local coreGui = gethui()
 -- objects
 local camera = workspace.CurrentCamera
 local drawingUI = Instance.new("ScreenGui")
@@ -18,9 +20,11 @@ local baseDrawingObj = setmetatable({
 	Color = Color3.new(),
 	Remove = function(self)
 		setmetatable(self, nil)
+		self:Destroy()
 	end,
 	Destroy = function(self)
 		setmetatable(self, nil)
+		self:Destroy()
 	end
 }, {
 	__add = function(t1, t2)
@@ -34,9 +38,9 @@ local baseDrawingObj = setmetatable({
 })
 local drawingFontsEnum = {
 	[0] = Font.fromEnum(Enum.Font.Roboto),
-	[1] = Font.fromEnum(Enum.Font.Legacy),
+	[1] = Font.fromEnum(Enum.Font.Ubuntu),
 	[2] = Font.fromEnum(Enum.Font.SourceSans),
-	[3] = Font.fromEnum(Enum.Font.RobotoMono),
+	[3] = Font.fromEnum(Enum.Font.Nunito),
 }
 -- function
 local function getFontFromIndex(fontIndex: number): Font
@@ -47,7 +51,10 @@ local function convertTransparency(transparency: number): number
 	return math.clamp(1 - transparency, 0, 1)
 end
 -- main
+local emptyT = {}
 local DrawingLib = {}
+local drawingCache = {}
+local DrawnObjs = {}
 DrawingLib.Fonts = {
 	["UI"] = 0,
 	["System"] = 1,
@@ -57,6 +64,8 @@ DrawingLib.Fonts = {
 
 function DrawingLib.new(drawingType)
 	drawingIndex += 1
+	local newDrawing = nil
+
 	if drawingType == "Line" then
 		local lineObj = ({
 			From = Vector2.zero,
@@ -77,7 +86,7 @@ function DrawingLib.new(drawingType)
 		lineFrame.Size = UDim2.new()
 
 		lineFrame.Parent = drawingUI
-		return setmetatable(table.create(0), {
+		newDrawing = setmetatable(table.create(0), {
 			__newindex = function(_, index, value)
 				if typeof(lineObj[index]) == "nil" then return end
 
@@ -164,7 +173,7 @@ function DrawingLib.new(drawingType)
 		uiStroke.Color = textObj.Color
 
 		textLabel.Parent, uiStroke.Parent = drawingUI, textLabel
-		return setmetatable(table.create(0), {
+		newDrawing = setmetatable(table.create(0), {
 			__newindex = function(_, index, value)
 				if typeof(textObj[index]) == "nil" then return end
 
@@ -246,7 +255,7 @@ function DrawingLib.new(drawingType)
 		uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 		circleFrame.Parent, uiCorner.Parent, uiStroke.Parent = drawingUI, circleFrame, circleFrame
-		return setmetatable(table.create(0), {
+		newDrawing = setmetatable(table.create(0), {
 			__newindex = function(_, index, value)
 				if typeof(circleObj[index]) == "nil" then return end
 
@@ -310,7 +319,7 @@ function DrawingLib.new(drawingType)
 		uiStroke.LineJoinMode = Enum.LineJoinMode.Miter
 
 		squareFrame.Parent, uiStroke.Parent = drawingUI, squareFrame
-		return setmetatable(table.create(0), {
+		newDrawing = setmetatable(table.create(0), {
 			__newindex = function(_, index, value)
 				if typeof(squareObj[index]) == "nil" then return end
 
@@ -354,7 +363,6 @@ function DrawingLib.new(drawingType)
 	elseif drawingType == "Image" then
 		local imageObj = ({
 			Data = "",
-			DataURL = "rbxassetid://0",
 			Size = Vector2.zero,
 			Position = Vector2.zero
 		} + baseDrawingObj)
@@ -371,13 +379,11 @@ function DrawingLib.new(drawingType)
 		imageFrame.ImageColor3 = imageObj.Color
 
 		imageFrame.Parent = drawingUI
-		return setmetatable(table.create(0), {
+		newDrawing = setmetatable(table.create(0), {
 			__newindex = function(_, index, value)
 				if typeof(imageObj[index]) == "nil" then return end
 
 				if index == "Data" then
-					-- later
-				elseif index == "DataURL" then -- temporary property
 					imageFrame.Image = value
 				elseif index == "Size" then
 					imageFrame.Size = UDim2.fromOffset(value.X, value.Y)
@@ -401,12 +407,13 @@ function DrawingLib.new(drawingType)
 						imageObj.Remove(self)
 						return imageObj:Remove()
 					end
-				elseif index == "Data" then
-					return nil -- TODO: add error here
 				end
 				return imageObj[index]
 			end,
+
 			__tostring = function() return "Drawing" end
+
+
 		})
 	elseif drawingType == "Quad" then
 		local QuadProperties = ({
@@ -454,7 +461,10 @@ function DrawingLib.new(drawingType)
 					PointD.Visible = true    
 				end
 				if Property == "Filled" then
-					-- i'll do this later
+					PointA.BackgroundTransparency = 1
+					PointB.BackgroundTransparency = 1
+					PointC.BackgroundTransparency = 1
+					PointD.BackgroundTransparency = 1   
 				end
 				if Property == "Color" then
 					PointA.Color = Value
@@ -495,7 +505,7 @@ function DrawingLib.new(drawingType)
 		_linePoints.A = DrawingLib.new("Line")
 		_linePoints.B = DrawingLib.new("Line")
 		_linePoints.C = DrawingLib.new("Line")
-		return setmetatable(table.create(0), {
+		newDrawing = setmetatable(table.create(0), {
 			__tostring = function() return "Drawing" end,
 			__newindex = function(_, index, value)
 				if typeof(triangleObj[index]) == "nil" then return end
@@ -514,7 +524,7 @@ function DrawingLib.new(drawingType)
 						linePoint[index] = value
 					end
 				elseif index == "Filled" then
-					-- later
+					_linePoints.BackgroundTransparency = 1
 				end
 				triangleObj[index] = value
 			end,
@@ -531,7 +541,31 @@ function DrawingLib.new(drawingType)
 				end
 				return triangleObj[index]
 			end,
+
 		})
+
 	end
+	if newDrawing then
+		DrawnObjs[newDrawing] = true
+	end
+
+	return newDrawing
 end
 getgenv().Drawing = DrawingLib
+
+isrenderobj = function(obj)
+	return DrawnObjs[obj] ~= nil
+end
+
+cleardrawcache = function()
+	for i, v in pairs(drawingUI:GetChildren()) do
+		v:Destroy()
+	end
+	table.clear(drawingCache)
+end
+getrenderproperty = function(obj, prop)
+	return obj[prop]
+end
+setrenderproperty = function(obj, prop, val)
+	obj[prop] = val
+end
