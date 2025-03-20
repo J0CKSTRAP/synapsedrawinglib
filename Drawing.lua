@@ -1,3 +1,7 @@
+--- sigma sigma boi 
+--- Credits to Enkei for making the original LuaU Drawing lib
+--- Credits to Dexian and the Metal team for fixing issues and added UNC Functions
+
 local cloneref = cloneref or function(ref)
     return ref
 end
@@ -21,22 +25,21 @@ local baseDrawingObj = setmetatable({
 	Color = Color3.new(),
 	Remove = function(self)
 		setmetatable(self, nil)
-		self:Destroy()
 	end,
 	Destroy = function(self)
 		setmetatable(self, nil)
-		self:Destroy()
 	end
 }, {
 	__add = function(t1, t2)
 		local result = table.clone(t1)
 
-		for index, value in t2 do
+		for index, value in pairs(t2) do
 			result[index] = value
 		end
 		return result
 	end
 })
+
 local drawingFontsEnum = {
 	[0] = Font.fromEnum(Enum.Font.Roboto),
 	[1] = Font.fromEnum(Enum.Font.Ubuntu),
@@ -596,5 +599,3 @@ end
 setrenderproperty = function(obj, prop, val)
 	obj[prop] = val
 end
-
-print("Loaded synapse LuaU drawing lib")
