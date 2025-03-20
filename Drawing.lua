@@ -14,7 +14,6 @@ drawingUI.Name = "Drawing"
 drawingUI.IgnoreGuiInset = true
 drawingUI.DisplayOrder = 0x7fffffff
 drawingUI.Parent = coreGui
-drawingUI.OnTopOfCoreBlur = true
 -- variables
 local drawingIndex = 0
 local uiStrokes = table.create(0)
@@ -24,9 +23,15 @@ local baseDrawingObj = setmetatable({
 	Transparency = 1,
 	Color = Color3.new(),
 	Remove = function(self)
+		if self._object and typeof(self._object.Destroy) == "function" then
+			self._object:Destroy()
+		end
 		setmetatable(self, nil)
 	end,
 	Destroy = function(self)
+		if self._object and typeof(self._object.Destroy) == "function" then
+			self._object:Destroy()
+		end
 		setmetatable(self, nil)
 	end
 }, {
@@ -39,6 +44,7 @@ local baseDrawingObj = setmetatable({
 		return result
 	end
 })
+
 
 local drawingFontsEnum = {
 	[0] = Font.fromEnum(Enum.Font.Roboto),
@@ -364,11 +370,11 @@ DrawingLib.new = function(drawingType)
 			__tostring = function() return "Drawing" end
 		})
 	elseif drawingType == "Image" then
-		local imageObj = ({
+		local imageObj = setmetatable({
 			Data = "",
 			Size = Vector2.zero,
 			Position = Vector2.zero
-		} + baseDrawingObj)
+		}, { __index = baseDrawingObj })
 
 		local imageFrame = Instance.new("ImageLabel")
 		imageFrame.Name = drawingIndex
@@ -382,9 +388,10 @@ DrawingLib.new = function(drawingType)
 		imageFrame.ImageColor3 = imageObj.Color
 
 		imageFrame.Parent = drawingUI
-		newDrawing = setmetatable(table.create(0), {
+
+		newDrawing = setmetatable({}, {
 			__newindex = function(_, index, value)
-				if typeof(imageObj[index]) == "nil" then return end
+				if imageObj[index] == nil then return end
 
 				if index == "Data" then
 					imageFrame.Image = value
@@ -407,16 +414,12 @@ DrawingLib.new = function(drawingType)
 				if index == "Remove" or index == "Destroy" then
 					return function()
 						imageFrame:Destroy()
-						imageObj.Remove(self)
 						return imageObj:Remove()
 					end
 				end
 				return imageObj[index]
 			end,
-
 			__tostring = function() return "Drawing" end
-
-
 		})
 	elseif drawingType == "Quad" then
 		local QuadProperties = ({
@@ -599,3 +602,4 @@ end
 setrenderproperty = function(obj, prop, val)
 	obj[prop] = val
 end
+
