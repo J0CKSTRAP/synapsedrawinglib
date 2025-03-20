@@ -1,8 +1,8 @@
---- sigma sigma boi 
---- Credits to Enkei for making the original LuaU Drawing lib
---- Credits to Dexian and the Metal team for fixing issues and added UNC Functions
+local cloneref = cloneref or function(ref)
+    return ref
+end
 
-local coreGui = gethui()
+local coreGui = cloneref(game:GetService("CoreGui"))
 -- objects
 local camera = workspace.CurrentCamera
 local drawingUI = Instance.new("ScreenGui")
@@ -10,6 +10,7 @@ drawingUI.Name = "Drawing"
 drawingUI.IgnoreGuiInset = true
 drawingUI.DisplayOrder = 0x7fffffff
 drawingUI.Parent = coreGui
+drawingUI.OnTopOfCoreBlur = true
 -- variables
 local drawingIndex = 0
 local uiStrokes = table.create(0)
@@ -42,12 +43,11 @@ local drawingFontsEnum = {
 	[2] = Font.fromEnum(Enum.Font.SourceSans),
 	[3] = Font.fromEnum(Enum.Font.Nunito),
 }
--- function
-local function getFontFromIndex(fontIndex: number): Font
+getFontFromIndex = function(fontIndex: number): Font
 	return drawingFontsEnum[fontIndex]
 end
 
-local function convertTransparency(transparency: number): number
+convertTransparency = function(transparency: number): number
 	return math.clamp(1 - transparency, 0, 1)
 end
 -- main
@@ -62,7 +62,7 @@ DrawingLib.Fonts = {
 	["Monospace"] = 3
 }
 
-function DrawingLib.new(drawingType)
+DrawingLib.new = function(drawingType)
 	drawingIndex += 1
 	local newDrawing = nil
 
@@ -455,10 +455,10 @@ function DrawingLib.new(drawingType)
 					PointA.To = Value
 				end
 				if Property == "Visible" then 
-					PointA.Visible = true
-					PointB.Visible = true
-					PointC.Visible = true
-					PointD.Visible = true    
+					PointA.Visible = Value
+					PointB.Visible = Value
+					PointC.Visible = Value
+					PointD.Visible = Value    
 				end
 				if Property == "Filled" then
 					PointA.BackgroundTransparency = 1
@@ -501,10 +501,13 @@ function DrawingLib.new(drawingType)
 			Filled = false
 		} + baseDrawingObj)
 
-		local _linePoints = table.create(0)
-		_linePoints.A = DrawingLib.new("Line")
-		_linePoints.B = DrawingLib.new("Line")
-		_linePoints.C = DrawingLib.new("Line")
+		local _linePoints = {
+			A = DrawingLib.new("Line"),
+			B = DrawingLib.new("Line"),
+			C = DrawingLib.new("Line")
+		}
+		local _fill = nil
+
 		newDrawing = setmetatable(table.create(0), {
 			__tostring = function() return "Drawing" end,
 			__newindex = function(_, index, value)
@@ -519,22 +522,46 @@ function DrawingLib.new(drawingType)
 				elseif index == "PointC" then
 					_linePoints.C.From = value
 					_linePoints.A.To = value
-				elseif (index == "Thickness" or index == "Visible" or index == "Color" or index == "ZIndex") then
-					for _, linePoint in _linePoints do
-						linePoint[index] = value
+					
+				elseif (index == "Thickness") then
+					for _, linePoint in ipairs(_linePoints) do 
+						linePoint.Thickness = value
+					end
+					
+				elseif index == "Visible" then
+					for _, linePoint in pairs(_linePoints) do
+						if linePoint then
+							linePoint.Visible = value
+						end
+					end
+					if _fill then
+						_fill.Visible = value
+					end
+					
+				elseif index == "Color" then
+					for _, linePoint in pairs(_linePoints) do
+						if linePoint then
+							linePoint.Color = value
+						end
+					end
+					if _fill then
+						_fill.Color = value
 					end
 				elseif index == "Filled" then
-					_linePoints.BackgroundTransparency = 1
+					for _, linePoint in pairs(_linePoints) do
+						if linePoint then
+							linePoint.Filled = value
+						end
+					end
 				end
 				triangleObj[index] = value
 			end,
 			__index = function(self, index)
 				if index == "Remove" or index == "Destroy" then
 					return function()
-						for _, linePoint in _linePoints do
+						for _, linePoint in ipairs(_linePoints) do
 							linePoint:Remove()
 						end
-
 						triangleObj.Remove(self)
 						return triangleObj:Remove()
 					end
@@ -569,3 +596,5 @@ end
 setrenderproperty = function(obj, prop, val)
 	obj[prop] = val
 end
+
+print("Loaded synapse LuaU drawing lib")
