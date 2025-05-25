@@ -14,6 +14,7 @@ drawingUI.Name = "Drawing"
 drawingUI.IgnoreGuiInset = true
 drawingUI.DisplayOrder = 0x7fffffff
 drawingUI.Parent = coreGui
+drawingUI.OnTopOfCoreBlur = true
 -- variables
 local drawingIndex = 0
 local uiStrokes = table.create(0)
