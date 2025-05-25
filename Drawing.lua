@@ -48,9 +48,9 @@ local baseDrawingObj = setmetatable({
 
 
 local drawingFontsEnum = {
-	[0] = Font.fromEnum(Enum.Font.Roboto),
-	[1] = Font.fromEnum(Enum.Font.Ubuntu),
-	[2] = Font.fromEnum(Enum.Font.SourceSans),
+	[0] = Font.fromEnum(Enum.Font.TitilliumWeb),
+	[1] = Font.fromEnum(Enum.Font.BuilderSansBold),
+	[2] = Font.fromEnum(Enum.Font.BuilderSansMedium),
 	[3] = Font.fromEnum(Enum.Font.Nunito),
 }
 getFontFromIndex = function(fontIndex: number): Font
