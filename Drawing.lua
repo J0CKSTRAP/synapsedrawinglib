@@ -374,7 +374,8 @@ DrawingLib.new = function(drawingType)
 		local imageObj = setmetatable({
 			Data = "",
 			Size = Vector2.zero,
-			Position = Vector2.zero
+			Position = Vector2.zero,
+            Rounding = 0
 		}, { __index = baseDrawingObj })
 
 		local imageFrame = Instance.new("ImageLabel")
@@ -389,6 +390,11 @@ DrawingLib.new = function(drawingType)
 		imageFrame.ImageColor3 = imageObj.Color
 
 		imageFrame.Parent = drawingUI
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, imageObj.Rounding)
+        corner.Parent = imageFrame
+
 
 		newDrawing = setmetatable({}, {
 			__newindex = function(_, index, value)
@@ -408,6 +414,8 @@ DrawingLib.new = function(drawingType)
 					imageFrame.ImageTransparency = convertTransparency(value)
 				elseif index == "Color" then
 					imageFrame.ImageColor3 = value
+                elseif index == "Rounding" then
+	                corner.CornerRadius = UDim.new(0, value)
 				end
 				imageObj[index] = value
 			end,
