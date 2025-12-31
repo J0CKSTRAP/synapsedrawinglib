@@ -383,6 +383,7 @@ DrawingLib.new = function(drawingType)
 		imageFrame.BorderSizePixel = 0
 		imageFrame.ScaleType = Enum.ScaleType.Stretch
 		imageFrame.BackgroundTransparency = 1
+        imageFrame.ClipsDescendants = true 
 
 		imageFrame.Visible = imageObj.Visible
 		imageFrame.ZIndex = imageObj.ZIndex
@@ -415,8 +416,9 @@ DrawingLib.new = function(drawingType)
 				elseif index == "Color" then
 					imageFrame.ImageColor3 = value
                 elseif index == "Rounding" then
-	                corner.CornerRadius = UDim.new(0, value)
-				end
+	                local max = math.min(imageFrame.AbsoluteSize.X, imageFrame.AbsoluteSize.Y) / 2
+	                corner.CornerRadius = UDim.new(0, math.clamp(value, 0, max))
+                end
 				imageObj[index] = value
 			end,
 			__index = function(self, index)
@@ -493,6 +495,7 @@ DrawingLib.new = function(drawingType)
 					PointC.ZIndex = Value
 					PointD.ZIndex = Value
 				end
+                QuadProperties[Property] = Value
 			end),
 			__index = (function(self, Property)
 				if (string.lower(tostring(Property)) == "remove") then
