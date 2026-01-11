@@ -12,6 +12,7 @@ local camera = workspace.CurrentCamera
 local drawingUI = Instance.new("ScreenGui")
 drawingUI.Name = "Drawing"
 drawingUI.IgnoreGuiInset = true
+drawingUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 drawingUI.DisplayOrder = 0x7fffffff
 drawingUI.Parent = coreGui
 drawingUI.OnTopOfCoreBlur = true
@@ -77,12 +78,15 @@ DrawingLib.new = function(drawingType)
 	local newDrawing = nil
 
 	if drawingType == "Line" then
-		local lineObj = ({
-			From = Vector2.zero,
-			To = Vector2.zero,
-			Thickness = 1,
-			ZIndex = 1
-		} + baseDrawingObj)
+		local lineObj = setmetatable({
+    		From = Vector2.zero,
+    		To = Vector2.zero,
+    		Thickness = 1,
+    		ZIndex = 1, 
+    		Visible = true,
+    		Color = Color3.new(1,1,1),
+    		Transparency = 0
+		}, { __index = baseDrawingObj })
 
 		local lineFrame = Instance.new("Frame")
 		lineFrame.Name = drawingIndex
@@ -126,7 +130,11 @@ DrawingLib.new = function(drawingType)
 				elseif index == "Visible" then
 					lineFrame.Visible = value
 				elseif index == "ZIndex" then
-					lineFrame.ZIndex = value
+    				if type(value) == "number" then
+        				lineFrame.ZIndex = value
+        				lineObj.ZIndex = value
+    				end
+				
 				elseif index == "Transparency" then
 					lineFrame.BackgroundTransparency = convertTransparency(value)
 				elseif index == "Color" then
