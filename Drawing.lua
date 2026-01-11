@@ -80,7 +80,8 @@ DrawingLib.new = function(drawingType)
 		local lineObj = ({
 			From = Vector2.zero,
 			To = Vector2.zero,
-			Thickness = 1
+			Thickness = 1,
+			ZIndex = 1
 		} + baseDrawingObj)
 
 		local lineFrame = Instance.new("Frame")
